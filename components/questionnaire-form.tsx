@@ -72,25 +72,51 @@ export default function QuestionnairePage({
     setAnswers((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const result = calculateScore(answers, region, visaId);
-    // 保存到 localStorage 供结果页使用
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('visaAssessmentResult', JSON.stringify({
-        result,
-        userName: name || '匿名用户',
+
+    try {
+      // 提交到 API，生成分享链接
+      const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          result,
+          userName: name || '匿名用户',
+          region,
+          visaId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.code) {
+        // 跳转到分享页面
+        router.push(`/share/${data.code}`);
+      } else {
+        // 如果 API 失败（比如没配置 RESEND_API_KEY），降级到本地结果页
+        console.warn('API submit failed, falling back to local result');
+        const params = new URLSearchParams({
+          region,
+          visa: visaId,
+          score: result.totalScore.toString(),
+          grade: result.grade,
+          name: name || '匿名用户',
+        });
+        router.push(`/result?${params.toString()}`);
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      // 网络错误也降级到本地结果页
+      const params = new URLSearchParams({
         region,
-        visaId,
-      }));
+        visa: visaId,
+        score: result.totalScore.toString(),
+        grade: result.grade,
+        name: name || '匿名用户',
+      });
+      router.push(`/result?${params.toString()}`);
     }
-    const params = new URLSearchParams({
-      region,
-      visa: visaId,
-      score: result.totalScore.toString(),
-      grade: result.grade,
-      name: name || '匿名用户',
-    });
-    router.push(`/result?${params.toString()}`);
   };
 
   const canProceed = () => {
