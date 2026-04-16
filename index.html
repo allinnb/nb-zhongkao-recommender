@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>宁波城区中考志愿填报系统</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>宁波城区中考志愿填报推荐</h1>
+      <p>输入分数与位次，获取冲、稳、保志愿推荐</p>
+    </header>
+
+    <main>
+      <section class="input-section">
+        <label for="studentName">考生姓名</label>
+        <input type="text" id="studentName" placeholder="请输入考生姓名" />
+
+        <label for="score">中考分数（0-660）</label>
+        <input type="number" id="score" min="0" max="660" placeholder="如：580" />
+
+        <label for="rank">位次号（可选）</label>
+        <input type="number" id="rank" min="1" placeholder="如：5000" />
+
+        <label for="email">邮箱（选填，用于结果保存）</label>
+        <input type="email" id="email" placeholder="可选" />
+
+        <div class="btn-row">
+          <button id="generateBtn">生成推荐方案</button>
+          <button id="exportPdfBtn" class="secondary">导出 PDF</button>
+        </div>
+      </section>
+
+      <section class="result-section hidden" id="resultSection">
+        <div class="result-header">
+          <h2>推荐结果</h2>
+          <button id="shareBtn">分享链接</button>
+        </div>
+        <p class="result-meta" id="resultMeta"></p>
+
+        <div class="recommendations">
+          <div class="category">
+            <h3>冲一冲（3所）</h3>
+            <ul id="list-chance"></ul>
+          </div>
+          <div class="category">
+            <h3>稳一稳（3所）</h3>
+            <ul id="list-stable"></ul>
+          </div>
+          <div class="category">
+            <h3>保一保（2所）</h3>
+            <ul id="list-safe"></ul>
+          </div>
+        </div>
+
+        <div class="category">
+          <h3>中等职业学校（10所）</h3>
+          <ul id="list-vocational"></ul>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>数据仅供参考，请以宁波市教育考试院官方发布为准</p>
+    </footer>
+  </div>
+
+  <!-- 分享弹窗 -->
+  <div id="shareDialog" class="hidden">
+    <div class="dialog-box">
+      <h3>分享推荐结果</h3>
+      <p>复制以下链接，发送给其他人即可查看相同结果：</p>
+      <input type="text" id="shareUrlInput" readonly />
+      <div class="dialog-btns">
+        <button id="dialogClose">关闭</button>
+        <button id="dialogCopy">复制链接</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast"></div>
+
+  <!-- PDF 导出依赖 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

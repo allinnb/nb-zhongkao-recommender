@@ -1,110 +1,64 @@
-# 签证出签率自测系统
+# 宁波城区中考志愿推荐系统
 
-一款帮助用户评估签证申请通过概率的开源工具，支持美国、加拿大、英国、澳大利亚、新西兰、申根地区六大区域的签证评估。
+基于"冲-稳-保"策略，为宁波城区（海曙区、江北区、鄞州区、镇海区、北仑区）中考考生智能推荐普通高中和中等职业学校的志愿填报工具。
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
+## 功能特点
 
-## 功能特性
+- **智能推荐**：根据考生分数和位次号，基于"冲-稳-保"策略推荐8所普通高中 + 10所中等职业学校
+- **录取概率**：为每所推荐学校计算录取概率（🟢极有可能 / 🟡有希望 / 🟠需努力）
+- **PDF导出**：一键导出推荐报告为PDF文件，方便保存和打印
+- **分享链接**：生成唯一分享链接，可发送给家长或顾问查看
+- **数据安全**：所有计算在本地完成，结果仅存储在浏览器本地
 
-- **六国/地区支持** - 美国、加拿大、英国、澳大利亚、新西兰、申根地区
-- **六维度评分模型** - 个人条件、财务状况、出行目的、材料完整性、国内约束力、户籍敏感度
-- **可视化雷达图** - 直观展示各维度得分
-- **PDF 报告导出** - 一键生成专业评估报告
-- **响应式设计** - 完美适配桌面和移动设备
-- **隐私友好** - 纯前端应用，数据不上传服务器
+## 使用方法
 
-## 评分维度
+1. 输入考生 **中考分数**（必填，满分660分）
+2. 输入考生 **位次号**（选填，不知道可留空自动估算）
+3. 填写考生姓名和邮箱（选填）
+4. 点击"生成推荐方案"，获得个性化学校推荐
 
-| 维度 | 权重 | 说明 |
+## 志愿填报策略说明
+
+| 类型 | 策略 | 说明 |
 |------|------|------|
-| 个人基础条件 | 25% | 年龄、学历、出境记录 |
-| 财务状况 | 25% | 收入、存款、资产证明 |
-| 出行目的 | 20% | 目的真实性、邀请函、行程计划 |
-| 材料完整性 | 15% | 护照有效期、保险、机票酒店预订 |
-| 国内约束力 | 10% | 工作、房产、家庭纽带 |
-| 户籍敏感度 | 5% | 地区敏感性因素 |
+| 🟠 冲 | 挑战型 | 位次略高于考生，有一定挑战性 |
+| 🟡 稳 | 匹配型 | 位次与考生接近，录取希望较大 |
+| 🟢 保 | 稳妥型 | 位次低于考生，录取较为稳妥 |
 
 ## 数据来源
 
-各国签证批准率数据来源于：
+2025年宁波城区各普通高中、中等职业学校统招批次录取分数线（公开数据整理）
 
-- 美国：CBP Travel Statistics / VisaGuide.it
-- 加拿大：IRCC Annual Report 2024 / CIC News
-- 英国：UKVI Immigration Statistics / Schengenvisainfo
-- 澳大利亚：Home Affairs Department Visa Grant Numbers
-- 新西兰：Immigration NZ Official Data / Stats NZ
-- 申根区：Schengenvisainfo.com / EU Official Statistics
-
-> **注意**：本工具仅供参考，不能替代官方正式签证申请。
-
-## 快速开始
-
-### 安装依赖
-
-```bash
-npm install
-```
-
-### 开发模式
-
-```bash
-npm run dev
-```
-
-访问 http://localhost:3000
-
-### 生产构建
-
-```bash
-npm run build
-npm start
-```
-
-## 项目结构
-
-```
-visa-approval-calculator/
-├── app/
-│   ├── page.tsx              # 首页（地区选择）
-│   ├── questionnaire/
-│   │   └── [region]/page.tsx # 问卷表单页
-│   └── result/
-│       └── page.tsx         # 结果展示页
-├── components/
-│   ├── questionnaire-form.tsx # 分步问卷表单
-│   ├── radar-chart.tsx       # 雷达图组件
-│   └── pdf-report.tsx        # PDF 导出组件
-├── lib/
-│   ├── types.ts               # TypeScript 类型定义
-│   ├── scoring/
-│   │   ├── algorithm.ts       # 核心评分算法
-│   │   ├── weights.ts        # 维度权重配置
-│   │   └── regions.ts        # 地区配置
-│   └── data/
-│       └── official-rates.ts  # 官方批准率数据
-└── public/
-```
+**数据仅供参考**，实际志愿填报请以宁波市教育局官方公布数据为准。
 
 ## 技术栈
 
-- **框架**：Next.js 16 (App Router)
-- **语言**：TypeScript
-- **样式**：Tailwind CSS
-- **图表**：Recharts
-- **PDF**：`@react-pdf/renderer`
-- **表单**：React Hook Form + Zod
-- **图标**：Lucide React
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS 4
+- @react-pdf/renderer
+- Lucide Icons
 
-## 贡献
+## 本地开发
 
-欢迎提交 Issue 和 Pull Request！
+```bash
+npm install
+npm run dev
+```
 
-## 开源协议
+## 构建部署
 
-MIT License
+```bash
+npm run build
+```
+
+构建产物在 `out` 目录，可部署至任意静态托管服务（GitHub Pages、Vercel、Netlify等）。
+
+## PDF 导出说明
+
+如果 PDF 中文显示为乱码，请将中文字体文件（例如 `SimSun.ttf`）放入项目根目录（或 `public/` 目录），然后取消 `script.js` 中对应代码的注释。如需完整中文字体支持，请参考 `script.js` 中的 "方案 C" 注释。
 
 ---
 
-*本工具仅供参考，实际签证结果取决于多种因素，请以官方信息为准。*
+**声明**：本工具仅供参考，不能替代官方正式志愿填报。实际录取结果取决于当年考生填报情况、学校招生计划等多种因素。
+
