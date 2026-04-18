@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>宁波中心城区中考志愿模拟编排结果</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>志愿模拟编排结果</h1>
+      <div class="user-info" id="userInfo"></div>
+    </header>
+
+    <main id="recommendations"></main>
+
+    <div class="actions">
+      <button id="downloadPdf" class="btn secondary">导出打印版 PDF</button>
+      <button id="copyLink" class="btn secondary">复制分享链接</button>
+      <a href="index.html" class="btn secondary">重新填报</a>
+    </div>
+
+    <div id="shareModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>分享链接</h3>
+        <input type="text" id="shareUrl" readonly />
+        <button id="closeShare" class="btn">关闭</button>
+      </div>
+    </div>
+
+    <footer>
+      <p>数据来源：宁波市教育局2024-2025年城区统招分数线 | 系统仅作志愿参考</p>
+    </footer>
+  </div>
+
+  <!-- jsPDF 和 vfs_fonts 内联 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

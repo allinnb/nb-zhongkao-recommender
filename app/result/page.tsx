@@ -1,233 +1,251 @@
 'use client';
 
+import Link from 'next/link';
+import { Suspense, useMemo, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
-import { regionConfigs } from '@/lib/scoring/regions';
-import type { Region, ScoringResult } from '@/lib/types';
-import ScoreRadarChart from '@/components/radar-chart';
-import { calculateScore, generateSuggestions } from '@/lib/scoring/algorithm';
-import { dimensionOrder, dimensionConfigs } from '@/lib/scoring/weights';
+import { AlertTriangle, ArrowLeft, CheckCircle2, Copy, Home, School, TrendingUp, UserRound, XCircle } from 'lucide-react';
 import PDFDownloadButton from '@/components/pdf-report';
-import {
-  ArrowLeft,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Lightbulb,
-  Home,
-} from 'lucide-react';
+import { generateRecommendation, getProbabilityInfo } from '@/lib/algorithm';
+import type { RecommendResult, RecommendedSchool } from '@/lib/types';
 
 function ResultContent() {
   const searchParams = useSearchParams();
-  const region = searchParams.get('region') as Region;
-  const visaId = searchParams.get('visa') || 'tourist';
-  const score = parseInt(searchParams.get('score') || '50');
-  const grade = (searchParams.get('grade') as 'red' | 'yellow' | 'green') || 'yellow';
-  const name = searchParams.get('name') || '匿名用户';
+  const result = useMemo<RecommendResult | null>(() => {
+    const name = searchParams.get('name')?.trim() ?? '';
+    const scoreParam = searchParams.get('score');
+    const rankParam = searchParams.get('rank');
+    const email = searchParams.get('email')?.trim() || undefined;
 
-  const [result, setResult] = useState<ScoringResult | null>(null);
+    const score = scoreParam ? Number(scoreParam) : NaN;
+    const rank = rankParam ? Number(rankParam) : undefined;
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('visaAssessmentResult');
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          setResult(data.result);
-        } catch (e) {
-          console.error('Failed to load saved result');
-        }
-      }
+    if (!name || !Number.isInteger(score) || score < 0 || score > 660) {
+      return null;
     }
-  }, []);
 
-  const regionConfig = regionConfigs[region];
-  const visaType = regionConfig.visaTypes.find((v) => v.id === visaId) || regionConfig.visaTypes[0];
+    if (rankParam && (!Number.isInteger(rank) || rank! < 1 || rank! > 60000)) {
+      return null;
+    }
 
-  const displayResult = result || calculateScore(
-    {
-      age: 30,
-      education: 'bachelor',
-      previousTravel: 2,
-      previousVisaDenial: false,
-      annualIncome: 15,
-      savings: 20,
-      hasProperty: false,
-      hasVehicle: false,
-      purpose: 'tourism',
-      hasInvitation: false,
-      hasDetailedPlan: false,
-      passportValid: 12,
-      hasTravelInsurance: false,
-      hasFlightBooking: false,
-      hasHotelBooking: false,
-      hasStableJob: true,
-      hasBusiness: false,
-      hasFamilyInChina: true,
-      hasHouseProperty: false,
-      isSensitiveRegion: false,
-      hasOfficialPassport: false,
-    },
-    region,
-    visaId
-  );
+    return generateRecommendation({
+      userName: name,
+      userScore: score,
+      userRank: rank,
+      userEmail: email,
+    });
+  }, [searchParams]);
 
-  const suggestions = generateSuggestions(displayResult);
-
-  const gradeConfig = {
-    red: {
-      label: '出签风险较高',
-      color: 'text-red-600',
-      bg: 'bg-red-50',
-      border: 'border-red-200',
-      icon: XCircle,
-      description: '建议在申请前充分准备材料，或考虑咨询专业顾问',
-    },
-    yellow: {
-      label: '出签概率中等',
-      color: 'text-amber-600',
-      bg: 'bg-amber-50',
-      border: 'border-amber-200',
-      icon: AlertCircle,
-      description: '您的材料基本合格，建议关注评分较低的维度',
-    },
-    green: {
-      label: '出签前景良好',
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      icon: CheckCircle,
-      description: '您的条件较为优秀，保持现有优势并完善材料',
-    },
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(window.location.href);
   };
 
-  const currentGrade = gradeConfig[grade] || gradeConfig.yellow;
-  const GradeIcon = currentGrade.icon;
+  if (!result) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-blue-50 px-4">
+        <div className="max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <XCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="mb-2 text-xl font-semibold text-slate-900">未识别到有效结果参数</h1>
+          <p className="mb-6 text-slate-500">请返回首页重新填写分数和位次后生成推荐方案。</p>
+          <Link href="/" className="inline-flex items-center gap-2 rounded-full bg-blue-500 px-6 py-3 font-medium text-white transition hover:bg-blue-600">
+            <Home className="h-4 w-4" />
+            返回首页
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{regionConfig.flag}</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
+              <School className="h-5 w-5 text-white" />
+            </div>
             <div>
-              <h1 className="font-semibold text-slate-900">评估结果</h1>
-              <p className="text-xs text-slate-500">{regionConfig.name} · {visaType.name}</p>
+              <h1 className="font-semibold text-slate-900">宁波城区中考志愿报告</h1>
+              <p className="text-xs text-slate-500">{result.userName} · {result.userScore} 分</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <a
-              href="/"
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900"
+            <button
+              onClick={handleCopyLink}
+              className="rounded-full px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
             >
-              <Home className="w-4 h-4" />
+              复制链接
+            </button>
+            <Link href="/" className="rounded-full px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
               首页
-            </a>
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        {/* Score Card */}
-        <div className={`${currentGrade.bg} border-2 ${currentGrade.border} rounded-2xl p-6 mb-6`}>
-          <div className="flex items-center gap-4 mb-4">
-            <div className={`w-14 h-14 rounded-full ${currentGrade.bg} border-2 ${currentGrade.border} flex items-center justify-center`}>
-              <GradeIcon className={`w-7 h-7 ${currentGrade.color}`} />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">综合出签概率</p>
-              <p className="text-4xl font-bold text-slate-900">{score}%</p>
-            </div>
-            <div className="ml-auto text-right">
-              <p className={`text-lg font-semibold ${currentGrade.color}`}>{currentGrade.label}</p>
-              <p className="text-sm text-slate-500">{name}</p>
-            </div>
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <section className="mb-6 grid gap-4 md:grid-cols-4">
+          <SummaryCard icon={<TrendingUp className="h-5 w-5 text-blue-500" />} label="中考分数" value={`${result.userScore} 分`} />
+          <SummaryCard icon={<UserRound className="h-5 w-5 text-purple-500" />} label="宁波市位次" value={`第 ${result.userRank} 位`} />
+          <SummaryCard icon={<School className="h-5 w-5 text-emerald-500" />} label="普高/中职推荐" value="8 所 + 10 所" />
+          <SummaryCard
+            icon={<AlertTriangle className="h-5 w-5 text-amber-500" />}
+            label="位次来源"
+            value={result.estimatedRank ? '系统估算' : '用户填写'}
+          />
+        </section>
+
+        <section className="mb-6 rounded-2xl bg-blue-50 p-4 text-sm text-blue-700">
+          <p className="font-medium">填报思路</p>
+          <p className="mt-1">
+            本系统采用“冲、稳、保”三段式推荐：前段给冲刺校，中段放最匹配学校，后段安排更稳妥学校，并进一步生成完整志愿顺序建议。
+          </p>
+        </section>
+
+        <SchoolSection title="普通高中推荐" subtitle="共 8 所" schools={result.highSchools} color="blue" />
+        <SchoolSection title="中等职业学校推荐" subtitle="共 10 所" schools={result.vocationalSchools} color="green" />
+
+        <section className="mb-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <h2 className="text-lg font-semibold text-slate-900">志愿顺序建议</h2>
           </div>
-          <p className="text-slate-600">{currentGrade.description}</p>
-        </div>
-
-        {/* Radar Chart */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
-          <h3 className="font-semibold text-slate-900 mb-4">六维度评分详情</h3>
-          <ScoreRadarChart data={displayResult.dimensionScores} />
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-6">
-            {dimensionOrder.map((dimId) => {
-              const dimScore = displayResult.dimensionScores.find((d) => d.dimension === dimId)!;
-              const config = dimensionConfigs.find((c) => c.id === dimId)!;
-              const isLow = dimScore.score < 60;
-
+          <div className="space-y-3">
+            {result.adviceList.map((item) => {
+              const prob = getProbabilityInfo(item.probability);
               return (
-                <div
-                  key={dimId}
-                  className={`p-3 rounded-xl border ${
-                    isLow ? 'border-amber-200 bg-amber-50' : 'border-slate-100 bg-slate-50'
-                  }`}
-                >
-                  <p className="text-sm text-slate-500">{config.name}</p>
-                  <p className={`text-xl font-bold ${isLow ? 'text-amber-600' : 'text-green-600'}`}>
-                    {dimScore.score}
-                  </p>
+                <div key={`${item.group}-${item.order}-${item.school.id}`} className="flex flex-col gap-2 rounded-2xl border border-slate-100 p-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+                      {item.order}
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-slate-900">{item.school.name}</p>
+                        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{item.group}</span>
+                        <span className={`rounded px-2 py-0.5 text-xs font-bold ${tierBadgeClass(item.tier)}`}>{item.tier}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-500">{item.reason}</p>
+                    </div>
+                  </div>
+                  <div className="text-sm text-slate-600 md:text-right">
+                    <div className={`font-semibold ${prob.color}`}>{item.probability}% · {prob.label}</div>
+                    <div className="text-xs text-slate-400">{item.school.category}{item.school.district ? ` · ${item.school.district}` : ''}</div>
+                  </div>
                 </div>
               );
             })}
           </div>
+        </section>
+
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <Link href="/" className="flex flex-1 items-center justify-center gap-2 rounded-full border border-slate-200 px-6 py-3 text-slate-700 transition hover:bg-slate-50">
+            <ArrowLeft className="h-4 w-4" />
+            返回重新填写
+          </Link>
+          <PDFDownloadButton result={result} />
         </div>
 
-        {/* Suggestions */}
-        {suggestions.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
-            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-amber-500" />
-              改善建议
-            </h3>
-            <ul className="space-y-3">
-              {suggestions.slice(0, 6).map((suggestion, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-slate-600">
-                  <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
-                    {idx + 1}
-                  </span>
-                  {suggestion}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <a
-            href="/"
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-slate-200 rounded-full text-slate-700 hover:bg-slate-50 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            重新评估
-          </a>
-          <PDFDownloadButton result={displayResult} userName={name} />
-        </div>
-
-        {/* Disclaimer */}
-        <div className="mt-8 p-4 bg-slate-100 rounded-xl text-sm text-slate-500">
-          <p className="font-medium text-slate-700 mb-2">免责声明</p>
+        <section className="mt-8 rounded-2xl bg-slate-100 p-4 text-sm text-slate-500">
+          <p className="mb-2 font-medium text-slate-700">使用提醒</p>
           <p>
-            本评估工具仅供参考，不能替代官方正式签证申请。实际出签结果取决于签证官的个案审核、
-            当前政策、申请季节等多种因素。本工具基于各国官方公开数据和行业通用评估模型，
-            不保证评估结果的100%准确性。
+            本推荐仅基于历史公开数据与冲稳保策略建模，用于辅助判断，不替代当年官方招生计划、最新分数线与学校招生政策。若位次为系统估算，请务必在正式填报前用真实位次再次核验。
           </p>
-        </div>
+        </section>
       </main>
     </div>
   );
 }
 
+function SummaryCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">{icon}<span className="text-sm text-slate-500">{label}</span></div>
+      <div className="text-xl font-semibold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function tierBadgeClass(tier: string) {
+  if (tier === '冲') return 'bg-orange-100 text-orange-700';
+  if (tier === '稳') return 'bg-blue-100 text-blue-700';
+  return 'bg-green-100 text-green-700';
+}
+
+function groupByTier(schools: RecommendedSchool[]) {
+  return {
+    冲: schools.filter((item) => item.tier === '冲'),
+    稳: schools.filter((item) => item.tier === '稳'),
+    保: schools.filter((item) => item.tier === '保'),
+  };
+}
+
+function SchoolSection({
+  title,
+  subtitle,
+  schools,
+  color,
+}: {
+  title: string;
+  subtitle: string;
+  schools: RecommendedSchool[];
+  color: 'blue' | 'green';
+}) {
+  const groups = groupByTier(schools);
+  const titleColor = color === 'blue' ? 'text-blue-600' : 'text-green-600';
+
+  return (
+    <section className="mb-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-5 flex items-center gap-2">
+        <School className={`h-5 w-5 ${titleColor}`} />
+        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+        <span className="text-sm text-slate-400">{subtitle}</span>
+      </div>
+
+      <div className="space-y-4">
+        {(['冲', '稳', '保'] as const).map((tier) => {
+          const tierSchools = groups[tier];
+          if (!tierSchools.length) return null;
+
+          return (
+            <div key={tier}>
+              <div className="mb-2 flex items-center gap-2">
+                <span className={`rounded px-2 py-0.5 text-xs font-bold ${tierBadgeClass(tier)}`}>{tier}</span>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+              <div className="space-y-2">
+                {tierSchools.map((item) => {
+                  const prob = getProbabilityInfo(item.probability);
+                  return (
+                    <div key={item.school.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium text-slate-900">{item.school.name}</p>
+                          <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{item.school.category}</span>
+                          {item.school.district ? <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{item.school.district}</span> : null}
+                        </div>
+                        <p className="mt-1 text-sm text-slate-500">{item.reason}</p>
+                      </div>
+                      <div className="text-sm md:text-right">
+                        <div className={`font-semibold ${prob.color}`}>{item.probability}% · {prob.label}</div>
+                        <div className="text-xs text-slate-400">位次差 {item.matchDelta > 0 ? '+' : ''}{item.matchDelta}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default function ResultPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">加载中...</p>
-      </div>
-    }>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-blue-50 text-slate-500">正在加载结果...</div>}>
       <ResultContent />
     </Suspense>
   );

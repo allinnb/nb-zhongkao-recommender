@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "签证出签率自测系统",
-  description: "帮助您评估美国、加拿大、英国、澳大利亚、新西兰、申根地区签证的通过概率",
+  title: "宁波城区中考志愿推荐系统",
+  description: "基于冲稳保策略，为宁波城区中考考生推荐普通高中和中等职业学校",
 };
 
 export default function RootLayout({

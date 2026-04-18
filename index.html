@@ -3,88 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>宁波城区中考志愿填报系统</title>
+  <title>宁波中心城区中考志愿模拟编排器</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>宁波城区中考志愿填报推荐</h1>
-      <p>输入分数与位次，获取冲、稳、保志愿推荐</p>
+      <h1>宁波中心城区中考志愿模拟编排器</h1>
+      <p>先按真实位次生成 8 个普高志愿，再独立保留 10 个中职备选位。</p>
     </header>
 
     <main>
-      <section class="input-section">
-        <label for="studentName">考生姓名</label>
-        <input type="text" id="studentName" placeholder="请输入考生姓名" />
-
-        <label for="score">中考分数（0-660）</label>
-        <input type="number" id="score" min="0" max="660" placeholder="如：580" />
-
-        <label for="rank">位次号（可选）</label>
-        <input type="number" id="rank" min="1" placeholder="如：5000" />
-
-        <label for="email">邮箱（选填，用于结果保存）</label>
-        <input type="email" id="email" placeholder="可选" />
-
-        <div class="btn-row">
-          <button id="generateBtn">生成推荐方案</button>
-          <button id="exportPdfBtn" class="secondary">导出 PDF</button>
-        </div>
+      <section class="intro-panel">
+        <h2>使用说明</h2>
+        <ul>
+          <li>本系统优先依据中心城区近年录取位次编排普通高中志愿顺序。</li>
+          <li>普高推荐固定输出 8 所，采用“冲、稳、保”结构。</li>
+          <li>中职部分当前仅保留 10 个备选位，待补充真实学校和专业数据库。</li>
+        </ul>
       </section>
 
-      <section class="result-section hidden" id="resultSection">
-        <div class="result-header">
-          <h2>推荐结果</h2>
-          <button id="shareBtn">分享链接</button>
-        </div>
-        <p class="result-meta" id="resultMeta"></p>
-
-        <div class="recommendations">
-          <div class="category">
-            <h3>冲一冲（3所）</h3>
-            <ul id="list-chance"></ul>
-          </div>
-          <div class="category">
-            <h3>稳一稳（3所）</h3>
-            <ul id="list-stable"></ul>
-          </div>
-          <div class="category">
-            <h3>保一保（2所）</h3>
-            <ul id="list-safe"></ul>
-          </div>
+      <form id="inputForm">
+        <div class="form-group">
+          <label for="name">考生姓名</label>
+          <input type="text" id="name" required placeholder="请输入考生姓名" />
         </div>
 
-        <div class="category">
-          <h3>中等职业学校（10所）</h3>
-          <ul id="list-vocational"></ul>
+        <div class="form-group">
+          <label for="score">中考分数（0-660）</label>
+          <input type="number" id="score" min="0" max="660" required placeholder="请输入分数" />
         </div>
-      </section>
+
+        <div class="form-group">
+          <label for="rank">位次号（全省排名，越小越好）</label>
+          <input type="number" id="rank" min="1" required placeholder="请输入位次号" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">邮箱（可选，用于结果通知）</label>
+          <input type="email" id="email" placeholder="example@email.com" />
+        </div>
+
+        <button type="submit" class="btn">生成推荐方案</button>
+      </form>
     </main>
 
     <footer>
-      <p>数据仅供参考，请以宁波市教育考试院官方发布为准</p>
+      <p>数据来源：宁波市教育局2024-2025年城区统招分数线 | 系统仅作志愿参考</p>
     </footer>
   </div>
 
-  <!-- 分享弹窗 -->
-  <div id="shareDialog" class="hidden">
-    <div class="dialog-box">
-      <h3>分享推荐结果</h3>
-      <p>复制以下链接，发送给其他人即可查看相同结果：</p>
-      <input type="text" id="shareUrlInput" readonly />
-      <div class="dialog-btns">
-        <button id="dialogClose">关闭</button>
-        <button id="dialogCopy">复制链接</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast 提示 -->
-  <div id="toast"></div>
-
-  <!-- PDF 导出依赖 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
